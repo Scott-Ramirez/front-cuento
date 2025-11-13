@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-// Backend corriendo en local
-const API_URL = 'http://localhost:3000';
+// Backend URL - usar variable de entorno o relativo para nginx proxy
+const API_URL = process.env.REACT_APP_API_URL || '';
 
 const api = axios.create({
   baseURL: API_URL,
