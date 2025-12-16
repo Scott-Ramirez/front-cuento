@@ -11,8 +11,8 @@ export const AuthProvider = ({ children }) => {
     // Verificar si hay un usuario guardado en localStorage
     const storedUser = localStorage.getItem('user');
     const token = localStorage.getItem('token');
-    
-    if (storedUser && token) {
+    // Evitar parsear null o el string 'undefined'
+    if (storedUser && storedUser !== 'undefined' && token) {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);

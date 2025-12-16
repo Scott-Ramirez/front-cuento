@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Eye, Heart, MessageCircle, Trash2, BookOpen, RefreshCw } from 'lucide-react';
 import api from '../services/api';
+import { getMediaUrl } from '../utils/media';
 import { useAuth } from '../context/AuthContext';
 import { showConfirm, showSuccess, showError } from '../utils/alerts';
 
@@ -230,7 +231,7 @@ const Dashboard = () => {
                 <div className="h-48 bg-gradient-to-r from-primary-400 to-primary-600 flex items-center justify-center relative">
                   {story.cover_image ? (
                     <img
-                      src={`${process.env.REACT_APP_ASSETS_URL}${story.cover_image}`}
+                      src={getMediaUrl(story.cover_image)}
                       alt={story.title}
                       className="w-full h-full object-cover"
                     />
