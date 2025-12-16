@@ -12,6 +12,7 @@
 /build
 
 # dotenv environment variable files
+# .gitignore
 .env
 .env.development.local
 .env.test.local
