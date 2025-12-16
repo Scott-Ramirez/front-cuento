@@ -1,17 +1,13 @@
 import axios from 'axios';
 
-// Backend URL - usar variable de entorno o relativo para nginx proxy
-const API_URL = process.env.REACT_APP_API_URL;
-
-
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: process.env.REACT_APP_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Interceptor para agregar token a todas las peticiones
+// Interceptor: token
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -20,12 +16,10 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error)
 );
 
-// Interceptor para manejar errores de autenticación
+// Interceptor: auth errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -39,4 +33,3 @@ api.interceptors.response.use(
 );
 
 export default api;
-export { API_URL };
