@@ -344,10 +344,11 @@ const BookReader = () => {
                     <button
                       onClick={handleLike}
                       disabled={!isAuthenticated || story.user_id === user?.id}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${hasLiked
+                      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+                        hasLiked
                           ? 'bg-red-500 text-white'
                           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      } disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <Heart size={18} fill={hasLiked ? 'currentColor' : 'none'} />
                       <span>{likesCount}</span>
@@ -405,12 +406,13 @@ const BookReader = () => {
             {/* Right Page */}
             <div className="p-8 bg-white relative">
               <div
-                className={`h-full flex flex-col transition-all duration-600 ${pageFlipping
+                className={`h-full flex flex-col transition-all duration-600 ${
+                  pageFlipping
                     ? flipDirection === 'next'
                       ? 'animate-flip-out-right'
                       : 'animate-flip-out-left'
                     : 'animate-flip-in'
-                  }`}
+                }`}
               >
                 {currentChapter ? (
                   <>
@@ -477,7 +479,7 @@ const BookReader = () => {
 
       {/* Comments Modal - MOVIDO FUERA DEL CONTENEDOR PRINCIPAL */}
       {showComments && (
-        <div
+        <div 
           className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
           style={{ zIndex: 9999 }}
           onClick={closeCommentsModal}
