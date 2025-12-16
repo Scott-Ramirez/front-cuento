@@ -333,8 +333,76 @@ const BookReader = () => {
 
       {/* Comments Modal */}
       {showComments && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          {/* Modal Content omitted for brevity, remains unchanged */}
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-auto">
+          <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg p-6 relative">
+            <button onClick={() => setShowComments(false)} className="absolute top-3 right-3 text-gray-500 hover:text-gray-900"><X size={20} /></button>
+            <h3 className="text-xl font-semibold mb-4">Comentarios ({comments.length})</h3>
+
+            <div className="max-h-[400px] overflow-y-auto space-y-4">
+              {visibleComments.length === 0 ? (
+                <p className="text-gray-500 text-center py-4">No hay comentarios aún</p>
+              ) : (
+                visibleComments.map(comment => (
+                  <div key={comment.id} className="border-b pb-3 last:border-b-0">
+                    <div className="flex items-start gap-3">
+                      {/* Avatar */}
+                      <div className="w-10 h-10 rounded-full flex-shrink-0 overflow-hidden bg-gray-300 flex items-center justify-center">
+                        {comment.user?.avatar ? (
+                          <img src={getMediaUrl(comment.user.avatar)} alt={comment.user.username} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-white font-medium">{comment.user?.username?.[0]?.toUpperCase() || 'U'}</span>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between">
+                          <p className="font-semibold">{comment.user?.username || 'Usuario'}</p>
+                          <span className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        </div>
+                        <p className="text-gray-800">{comment.comment}</p>
+                        {!isOwnStory && <button onClick={() => handleReply(comment.id, comment.user?.username)} className="text-xs text-primary-600 mt-1">Responder</button>}
+
+                        {/* Replies */}
+                        {comment.replies && comment.replies.length > 0 && (
+                          <div className="ml-12 mt-3 space-y-3">
+                            {comment.replies.map(reply => (
+                              <div key={reply.id} className="flex items-start gap-3">
+                                <div className="w-8 h-8 rounded-full flex-shrink-0 overflow-hidden bg-gray-300 flex items-center justify-center">
+                                  {reply.user?.avatar ? (
+                                    <img src={getMediaUrl(reply.user.avatar)} alt={reply.user.username} className="w-full h-full object-cover" />
+                                  ) : (
+                                    <span className="text-white font-medium">{reply.user?.username?.[0]?.toUpperCase() || 'U'}</span>
+                                  )}
+                                </div>
+                                <div className="flex-1 min-w-0 bg-gray-50 p-2 rounded-lg">
+                                  <div className="flex items-center justify-between">
+                                    <p className="text-sm font-semibold">{reply.user?.username || 'Usuario'}</p>
+                                    <span className="text-xs text-gray-500">{new Date(reply.created_at).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}</span>
+                                  </div>
+                                  <p className="text-sm">{reply.comment}</p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+              {visibleComments.length < commentTree.length && (
+                <button onClick={loadMoreComments} className="w-full text-center text-primary-600 mt-2">Cargar más</button>
+              )}
+            </div>
+
+            {/* Comment Input */}
+            {isAuthenticated && !isOwnStory && (
+              <form onSubmit={handleComment} className="mt-4 flex gap-2">
+                {replyTo && <span className="text-gray-600 text-sm">Respondiendo a {replyTo.username} <button type="button" onClick={cancelReply} className="ml-1 text-red-500">Cancelar</button></span>}
+                <input type="text" className="flex-1 border rounded-lg px-3 py-2" value={newComment} onChange={(e) => setNewComment(e.target.value)} placeholder="Escribe un comentario..." />
+                <button type="submit" className="px-4 py-2 bg-primary-600 text-white rounded-lg">Enviar</button>
+              </form>
+            )}
+          </div>
         </div>
       )}
 

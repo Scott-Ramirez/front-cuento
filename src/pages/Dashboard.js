@@ -16,32 +16,26 @@ const Dashboard = () => {
 
   useEffect(() => {
     fetchMyStories();
-    // Actualizar cada 30 segundos para obtener datos en tiempo real
     const interval = setInterval(() => {
       fetchMyStories();
     }, 30000);
-
     return () => clearInterval(interval);
   }, []);
 
   const fetchMyStories = async (isManualRefresh = false) => {
-    if (isManualRefresh) {
-      setRefreshing(true);
-    }
-    
+    if (isManualRefresh) setRefreshing(true);
+
     try {
       const response = await api.get('/stories/my-stories');
-      
-      // Obtener datos en tiempo real de cada cuento (likes y comentarios)
+
       const storiesWithStats = await Promise.all(
         response.data.map(async (story) => {
           try {
-            // Obtener contadores de likes y comentarios
             const [likesRes, commentsRes] = await Promise.all([
               api.get(`/stories/${story.id}/likes/count`),
               api.get(`/stories/${story.id}/comments`)
             ]);
-            
+
             return {
               ...story,
               likes_count: likesRes.data.count || 0,
@@ -49,42 +43,31 @@ const Dashboard = () => {
             };
           } catch (error) {
             console.error(`Error fetching stats for story ${story.id}:`, error);
-            return {
-              ...story,
-              likes_count: 0,
-              comments_count: 0
-            };
+            return { ...story, likes_count: 0, comments_count: 0 };
           }
         })
       );
-      
+
       setStories(storiesWithStats);
       setLastUpdate(new Date());
-      
-      if (isManualRefresh) {
-        showSuccess('Datos actualizados correctamente');
-      }
+
+      if (isManualRefresh) showSuccess('Datos actualizados correctamente');
     } catch (error) {
       console.error('Error fetching stories:', error);
-      if (isManualRefresh) {
-        showError('Error al cargar tus cuentos');
-      }
+      if (isManualRefresh) showError('Error al cargar tus cuentos');
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  const handleRefresh = () => {
-    fetchMyStories(true);
-  };
+  const handleRefresh = () => fetchMyStories(true);
 
   const handleDelete = async (id) => {
     const result = await showConfirm(
       'Esta acción no se puede deshacer. Se eliminará el cuento y todos sus capítulos, comentarios y likes.',
       '¿Estás seguro de eliminar este cuento?'
     );
-    
     if (!result.isConfirmed) return;
 
     try {
@@ -109,12 +92,10 @@ const Dashboard = () => {
     }
   };
 
-  // Pagination logic
   const indexOfLastStory = currentPage * storiesPerPage;
   const indexOfFirstStory = indexOfLastStory - storiesPerPage;
   const currentStories = stories.slice(indexOfFirstStory, indexOfLastStory);
   const totalPages = Math.ceil(stories.length / storiesPerPage);
-
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   if (loading) {
@@ -132,8 +113,6 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Mis Cuentos</h1>
           <p className="text-gray-600">Bienvenido, {user?.username}</p>
         </div>
-        
-        {/* Botón de actualizar */}
         <div className="flex flex-col items-end gap-1">
           <button
             onClick={handleRefresh}
@@ -151,7 +130,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* User Stats - Gráficos bonitos */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Total Historias */}
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
@@ -228,7 +206,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Título de sección */}
       <div className="mb-6 flex items-center justify-between">
         <h2 className="text-2xl font-bold text-gray-900">Mis Publicaciones</h2>
         <span className="text-gray-600">{stories.length} {stories.length === 1 ? 'cuento' : 'cuentos'}</span>
@@ -247,36 +224,30 @@ const Dashboard = () => {
         </div>
       ) : (
         <>
-          {/* Stories Grid - Diseño simplificado */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             {currentStories.map((story) => (
               <div key={story.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow">
-                {/* Cover Image */}
                 <div className="h-48 bg-gradient-to-r from-primary-400 to-primary-600 flex items-center justify-center relative">
                   {story.cover_image ? (
                     <img
-                      src={`http://localhost:3000${story.cover_image}`}
+                      src={`${process.env.REACT_APP_ASSETS_URL}${story.cover_image}`}
                       alt={story.title}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <span className="text-white text-6xl">📖</span>
                   )}
-                  {/* Status Badge */}
-                  <div className={`absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-full font-semibold ${
-                    story.status === 'published' ? 'bg-green-500' : 'bg-yellow-500'
-                  }`}>
+                  <div className={`absolute top-2 right-2 text-white text-xs px-2 py-1 rounded-full font-semibold ${story.status === 'published' ? 'bg-green-500' : 'bg-yellow-500'
+                    }`}>
                     {story.status === 'published' ? 'Publicado' : 'Borrador'}
                   </div>
                 </div>
 
-                {/* Content */}
                 <div className="p-4">
                   <h3 className="text-lg font-bold text-gray-900 mb-3 line-clamp-2 min-h-[3.5rem]">
                     {story.title}
                   </h3>
 
-                  {/* Stats */}
                   <div className="flex items-center justify-around text-sm text-gray-600 mb-4 py-2 bg-gray-50 rounded-lg">
                     <div className="flex items-center gap-1">
                       <Eye size={16} className="text-blue-500" />
@@ -292,27 +263,23 @@ const Dashboard = () => {
                     </div>
                   </div>
 
-                  {/* Publish Toggle Switch */}
                   <div className="flex items-center justify-between mb-3 pb-3 border-b border-gray-200">
                     <span className="text-sm font-medium text-gray-700">
                       {story.status === 'published' ? 'Publicado' : 'Borrador'}
                     </span>
                     <button
                       onClick={() => handlePublish(story.id, story.status)}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${
-                        story.status === 'published' ? 'bg-green-500' : 'bg-gray-300'
-                      }`}
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 ${story.status === 'published' ? 'bg-green-500' : 'bg-gray-300'
+                        }`}
                       title={story.status === 'published' ? 'Despublicar' : 'Publicar'}
                     >
                       <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          story.status === 'published' ? 'translate-x-6' : 'translate-x-1'
-                        }`}
+                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${story.status === 'published' ? 'translate-x-6' : 'translate-x-1'
+                          }`}
                       />
                     </button>
                   </div>
 
-                  {/* Actions */}
                   <div className="flex gap-2">
                     <Link
                       to={`/stories/${story.id}`}
@@ -333,7 +300,6 @@ const Dashboard = () => {
             ))}
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex justify-center items-center gap-2 mt-8">
               <button
@@ -343,21 +309,20 @@ const Dashboard = () => {
               >
                 Anterior
               </button>
-              
+
               {[...Array(totalPages)].map((_, index) => (
                 <button
                   key={index + 1}
                   onClick={() => paginate(index + 1)}
-                  className={`px-4 py-2 rounded-lg ${
-                    currentPage === index + 1
+                  className={`px-4 py-2 rounded-lg ${currentPage === index + 1
                       ? 'bg-primary-600 text-white'
                       : 'bg-white border border-gray-300 hover:bg-gray-50'
-                  }`}
+                    }`}
                 >
                   {index + 1}
                 </button>
               ))}
-              
+
               <button
                 onClick={() => paginate(currentPage + 1)}
                 disabled={currentPage === totalPages}
