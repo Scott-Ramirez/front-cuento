@@ -1,14 +1,14 @@
-import ShareButton from '../components/story/ShareButton';
-import CommentsSection from '../components/story/CommentsSection';
-import ChapterList from '../components/story/ChapterList';
-import StoryDescription from '../components/story/StoryDescription';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import AddChapterForm from '../components/story/AddChapterForm';
 import api from '../services/api';
 import useStoryDetail from '../hooks/useStoryDetail';
 import { useAuth } from '../context/AuthContext';
 
+import ShareButton from '../components/story/ShareButton';
+import CommentsSection from '../components/story/CommentsSection';
+import ChapterList from '../components/story/ChapterList';
+import StoryDescription from '../components/story/StoryDescription';
+import AddChapterForm from '../components/story/AddChapterForm';
 import StoryCover from '../components/story/StoryCover';
 import StoryTitle from '../components/story/StoryTitle';
 import StoryMeta from '../components/story/StoryMeta';
@@ -29,55 +29,90 @@ const StoryDetail = () => {
     addComment,
   } = useStoryDetail(id, requireAuth, navigate);
 
-  // Estados locales
+  /* ================= ESTADOS ================= */
   const [savingTitle, setSavingTitle] = useState(false);
   const [newComment, setNewComment] = useState('');
+
   const [editingChapter, setEditingChapter] = useState(null);
   const [newChapterTitle, setNewChapterTitle] = useState('');
   const [savingChapter, setSavingChapter] = useState(false);
-  const [uploadingCover, setUploadingCover] = useState(false);
-  const [uploadingChapterImage, setUploadingChapterImage] = useState({});
+
   const [editingChapterContent, setEditingChapterContent] = useState(null);
   const [newChapterContent, setNewChapterContent] = useState('');
   const [savingChapterContent, setSavingChapterContent] = useState(false);
+
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const [uploadingChapterImage, setUploadingChapterImage] = useState({});
+
   const [addingChapter, setAddingChapter] = useState(false);
   const [showAddChapter, setShowAddChapter] = useState(false);
 
-  // Carga inicial
+  // Respuestas a comentarios
+  const [replyingId, setReplyingId] = useState(null);
+  const [replyingLoading, setReplyingLoading] = useState(false);
+  const [repliesByComment, setRepliesByComment] = useState({});
+
+  /* ================= EFFECTS ================= */
   useEffect(() => {
     loadData();
     // eslint-disable-next-line
   }, [id]);
 
-  /* ===================== TITLE ===================== */
+  // Agrupar replies por comment_id
+  useEffect(() => {
+    if (!comments) return;
+    const replies = {};
+    comments.forEach((c) => {
+      if (c.parent_comment_id) {
+        if (!replies[c.parent_comment_id]) replies[c.parent_comment_id] = [];
+        replies[c.parent_comment_id].push(c);
+      }
+    });
+    setRepliesByComment(replies);
+  }, [comments]);
+
+  /* ================= TITLE ================= */
   const handleSaveTitle = async (newTitleValue) => {
     if (!newTitleValue.trim() || newTitleValue === story.title) return;
     setSavingTitle(true);
     try {
       await api.put(`/stories/${id}`, { title: newTitleValue });
       setStory({ ...story, title: newTitleValue });
-    } catch { }
+    } catch {}
     finally {
       setSavingTitle(false);
     }
   };
 
-  /* ================= DESCRIPTION =================== */
+  /* ================= DESCRIPTION ================= */
   const handleSaveDescription = async (newDescriptionValue) => {
     if (!newDescriptionValue.trim() || newDescriptionValue === story.description) return;
     try {
       await api.put(`/stories/${id}`, { description: newDescriptionValue });
       setStory({ ...story, description: newDescriptionValue });
-    } catch { }
+    } catch {}
   };
 
-  /* ================= COMMENTS ====================== */
+  /* ================= COMMENTS ================= */
   const handleComment = async (e) => {
     e.preventDefault();
     await addComment(newComment, () => setNewComment(''));
   };
 
-  /* ================= CHAPTERS ====================== */
+  const handleReply = async (parentId, replyText) => {
+    setReplyingLoading(true);
+    try {
+      await api.post(`/stories/${id}/comments`, {
+        comment: replyText,
+        parent_comment_id: parentId,
+      });
+      loadData();
+      setReplyingId(null);
+    } catch {}
+    setReplyingLoading(false);
+  };
+
+  /* ================= CHAPTERS ================= */
   const handleSaveChapterTitle = async (ch) => {
     if (!newChapterTitle.trim() || newChapterTitle === ch.title) {
       setEditingChapter(null);
@@ -88,23 +123,10 @@ const StoryDetail = () => {
       await api.put(`/stories/${id}/chapters/${ch.id}`, { title: newChapterTitle });
       loadData();
       setEditingChapter(null);
-    } catch { }
+    } catch {}
     setSavingChapter(false);
   };
 
-  // AGREGAR CAPÍTULO
-  const handleAddChapter = async ({ title, content }) => {
-    setAddingChapter(true);
-    try {
-      await api.post(`/stories/${id}/chapters`, { title, content });
-      loadData();
-      setShowAddChapter(false);
-    } catch (err) {
-      // Manejo de error opcional
-    } finally {
-      setAddingChapter(false);
-    }
-  };
   const handleSaveChapterContent = async (ch) => {
     if (!newChapterContent.trim() || newChapterContent === ch.content) {
       setEditingChapterContent(null);
@@ -115,8 +137,20 @@ const StoryDetail = () => {
       await api.put(`/stories/${id}/chapters/${ch.id}`, { content: newChapterContent });
       loadData();
       setEditingChapterContent(null);
-    } catch { }
+    } catch {}
     setSavingChapterContent(false);
+  };
+
+  const handleAddChapter = async ({ title, content }) => {
+    setAddingChapter(true);
+    try {
+      await api.post(`/stories/${id}/chapters`, { title, content });
+      loadData();
+      setShowAddChapter(false);
+    } catch {}
+    finally {
+      setAddingChapter(false);
+    }
   };
 
   const handleChapterImageChange = async (ch, e) => {
@@ -133,7 +167,7 @@ const StoryDetail = () => {
         image: uploadRes.data.path,
       });
       loadData();
-    } catch { }
+    } catch {}
     setUploadingChapterImage((prev) => ({ ...prev, [ch.id]: false }));
   };
 
@@ -149,10 +183,11 @@ const StoryDetail = () => {
       });
       await api.put(`/stories/${id}`, { cover_image: uploadRes.data.path });
       loadData();
-    } catch { }
+    } catch {}
     setUploadingCover(false);
   };
 
+  /* ================= RENDER ================= */
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -210,8 +245,6 @@ const StoryDetail = () => {
         />
       )}
 
-
-      {/* ADD CHAPTER BUTTON */}
       <div className="mb-6">
         {!showAddChapter ? (
           <button
@@ -226,11 +259,15 @@ const StoryDetail = () => {
       </div>
 
       <CommentsSection
-        comments={comments}
+        comments={comments.filter((c) => !c.parent_comment_id)}
         newComment={newComment}
         setNewComment={setNewComment}
         onAddComment={handleComment}
-        loading={loading}
+        loading={loading || replyingLoading}
+        onReply={handleReply}
+        replyingId={replyingId}
+        setReplyingId={setReplyingId}
+        repliesByComment={repliesByComment}
       />
 
       <div className="flex justify-end mt-8">
