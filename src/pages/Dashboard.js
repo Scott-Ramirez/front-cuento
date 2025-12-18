@@ -1,25 +1,19 @@
 import React from 'react';
 import { Search } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
 import useDashboard from '../hooks/useDashboard';
 
 import DashboardStoriesGrid from '../components/dashboard/DashboardStoriesGrid';
 import Pagination from '../components/dashboard/Pagination';
 
 const Dashboard = () => {
-  const { user } = useAuth();
-  
   const {
     stories,
     loading,
-    refreshing,
-    lastUpdate,
     currentPage,
     currentStories,
     totalPages,
     searchTerm,
     setSearchTerm,
-    handleRefresh,
     handleDelete,
     handlePublish,
     paginate,

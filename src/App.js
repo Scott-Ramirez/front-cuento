@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SystemAlertsProvider } from './context/SystemAlertsContext';
+import SystemAlerts from './components/common/SystemAlerts';
 import MainLayout from './components/MainLayout';
 import Home from './pages/Home';
 import Login from './pages/Login';
@@ -11,6 +13,7 @@ import CreateStory from './pages/CreateStory';
 import Profile from './pages/Profile';
 import Explore from './pages/Explore';
 import BookReader from './pages/BookReader';
+import useUpdateDetector from './hooks/useUpdateDetector';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -31,69 +34,82 @@ const ProtectedRoute = ({ children }) => {
   return children;
 };
 
+// Component that handles update detection
+const AppContent = () => {
+  // Initialize update detector
+  useUpdateDetector();
+
+  return (
+    <Routes>
+      {/* Public routes without layout wrapper */}
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      
+      {/* Public routes with Navbar and full Footer */}
+      <Route path="/" element={<MainLayout isAdminRoute={false}><Home /></MainLayout>} />
+      <Route path="/stories/:id" element={<MainLayout isAdminRoute={false}><StoryDetail /></MainLayout>} />
+      
+      {/* Admin protected routes with Sidebar and simple footer */}
+      <Route
+        path="/story/:id"
+        element={
+          <ProtectedRoute>
+            <MainLayout isAdminRoute={true}><StoryDetail /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute>
+            <MainLayout isAdminRoute={true}><Dashboard /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/create"
+        element={
+          <ProtectedRoute>
+            <MainLayout isAdminRoute={true}><CreateStory /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/explore"
+        element={
+          <ProtectedRoute>
+            <MainLayout isAdminRoute={true}><Explore /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/read/:id"
+        element={
+          <ProtectedRoute>
+            <BookReader />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <MainLayout isAdminRoute={true}><Profile /></MainLayout>
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+};
+
 function App() {
   return (
     <Router>
       <AuthProvider>
-        <Routes>
-          {/* Public routes without layout wrapper */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          
-          {/* Public routes with Navbar and full Footer */}
-          <Route path="/" element={<MainLayout isAdminRoute={false}><Home /></MainLayout>} />
-          <Route path="/stories/:id" element={<MainLayout isAdminRoute={false}><StoryDetail /></MainLayout>} />
-          
-          {/* Admin protected routes with Sidebar and simple footer */}
-          <Route
-            path="/story/:id"
-            element={
-              <ProtectedRoute>
-                <MainLayout isAdminRoute={true}><StoryDetail /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <MainLayout isAdminRoute={true}><Dashboard /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/create"
-            element={
-              <ProtectedRoute>
-                <MainLayout isAdminRoute={true}><CreateStory /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/explore"
-            element={
-              <ProtectedRoute>
-                <MainLayout isAdminRoute={true}><Explore /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/read/:id"
-            element={
-              <ProtectedRoute>
-                <BookReader />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <MainLayout isAdminRoute={true}><Profile /></MainLayout>
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
+        <SystemAlertsProvider>
+          <AppContent />
+          <SystemAlerts />
+        </SystemAlertsProvider>
       </AuthProvider>
     </Router>
   );
