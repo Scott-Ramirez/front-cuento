@@ -30,6 +30,7 @@ const BookReader = () => {
 
   useEffect(() => {
     fetchStory();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   useEffect(() => {
@@ -39,6 +40,7 @@ const BookReader = () => {
       if (!isOwn) incrementView();
       checkIfLiked();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [story?.id, user?.id]);
 
   const fetchStory = async () => {

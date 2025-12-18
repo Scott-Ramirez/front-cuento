@@ -20,7 +20,6 @@ const Explore = () => {
   const [selectedTag, setSelectedTag] = useState('');
   const [sortBy, setSortBy] = useState('recent');
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [allTags, setAllTags] = useState([]);
 
   useEffect(() => {
@@ -43,7 +42,6 @@ const Explore = () => {
       const { data } = await api.get('/stories/explore', { params });
 
       setStories(data.stories || data);
-      setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching stories:', error);
     } finally {

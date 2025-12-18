@@ -43,10 +43,6 @@ const SystemAlerts = () => {
     return styles[type] || styles.info;
   };
 
-  const handleRefresh = () => {
-    window.location.reload();
-  };
-
   return (
     <div className="fixed top-4 right-4 z-50 space-y-2 max-w-md">
       {alerts.map((alert) => {
