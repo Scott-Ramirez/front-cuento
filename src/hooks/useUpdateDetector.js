@@ -14,8 +14,9 @@ const useUpdateDetector = () => {
     
     isCheckingRef.current = true;
     try {
-      // Opción 1: Verificar contra un endpoint del backend
-      const response = await fetch('http://localhost:3000/version');
+      // Usar variable de entorno para la URL del API
+      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
+      const response = await fetch(`${apiUrl}/version`);
       if (response.ok) {
         const { version, maintenance } = await response.json();
         
