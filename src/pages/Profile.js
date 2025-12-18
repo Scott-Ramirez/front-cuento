@@ -38,7 +38,7 @@ const Profile = () => {
   if (!user) return null;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
       <ProfileHeader
         profileData={profileData}
         userStats={userStats}
@@ -53,7 +53,7 @@ const Profile = () => {
           onTabChange={setActiveTab}
         />
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {activeTab === 'profile' && (
             <PersonalInfoForm
               profileData={profileData}

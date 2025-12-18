@@ -24,14 +24,15 @@ const ProfileTabs = ({ activeTab, onTabChange }) => {
             <button
               key={tab.id}
               onClick={() => onTabChange(tab.id)}
-              className={`px-6 py-4 text-sm font-medium border-b-2 transition-colors ${
+              className={`flex-1 px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium border-b-2 transition-colors ${
                 activeTab === tab.id
                   ? 'border-primary-500 text-primary-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
               }`}
             >
-              <Icon className="inline mr-2" size={16} />
-              {tab.label}
+              <Icon className="inline mr-1 sm:mr-2" size={16} />
+              <span className="hidden sm:inline">{tab.label}</span>
+              <span className="sm:hidden">{tab.id === 'profile' ? 'Perfil' : 'Seguridad'}</span>
             </button>
           );
         })}

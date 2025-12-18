@@ -11,11 +11,11 @@ const PersonalInfoForm = ({
 }) => {
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold text-gray-900">Información Personal</h2>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Información Personal</h2>
         <button
           onClick={onEditToggle}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          className="flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
         >
           {isEditing ? <X size={16} /> : <Edit2 size={16} />}
           {isEditing ? 'Cancelar' : 'Editar'}

@@ -11,7 +11,7 @@ const SecurityForm = ({
 }) => {
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold text-gray-900">Cambiar contraseña</h2>
+      <h2 className="text-lg sm:text-xl font-semibold text-gray-900">Cambiar contraseña</h2>
       
       <div className="space-y-4">
         <div>

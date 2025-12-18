@@ -25,13 +25,13 @@ const UserStats = ({ stats }) => {
   ];
 
   return (
-    <div className="grid grid-cols-2 gap-4 text-center">
+    <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-2 gap-3 sm:gap-4 text-center">
       {statsData.map((stat, index) => (
-        <div key={index} className="bg-gray-50 rounded-lg p-3">
-          <div className={`text-2xl font-bold ${stat.color}`}>
+        <div key={index} className="bg-gray-50 rounded-lg p-2 sm:p-3">
+          <div className={`text-lg sm:text-2xl font-bold ${stat.color}`}>
             {stat.value}
           </div>
-          <div className="text-sm text-gray-600">
+          <div className="text-xs sm:text-sm text-gray-600">
             {stat.label}
           </div>
         </div>
