@@ -29,8 +29,11 @@ const Dashboard = () => {
     try {
       const response = await api.get('/stories/my-stories');
 
+      // Verificar que la respuesta sea un array
+      const storiesData = Array.isArray(response.data) ? response.data : [];
+
       const storiesWithStats = await Promise.all(
-        response.data.map(async (story) => {
+        storiesData.map(async (story) => {
           try {
             const [likesRes, commentsRes] = await Promise.all([
               api.get(`/stories/${story.id}/likes/count`),
@@ -40,7 +43,7 @@ const Dashboard = () => {
             return {
               ...story,
               likes_count: likesRes.data.count || 0,
-              comments_count: commentsRes.data.length || 0
+              comments_count: Array.isArray(commentsRes.data) ? commentsRes.data.length : 0
             };
           } catch (error) {
             console.error(`Error fetching stats for story ${story.id}:`, error);
@@ -55,6 +58,7 @@ const Dashboard = () => {
       if (isManualRefresh) showSuccess('Datos actualizados correctamente');
     } catch (error) {
       console.error('Error fetching stories:', error);
+      setStories([]);
       if (isManualRefresh) showError('Error al cargar tus cuentos');
     } finally {
       setLoading(false);
