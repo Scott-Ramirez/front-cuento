@@ -6,6 +6,7 @@ import ProfileHeader from '../components/profile/ProfileHeader';
 import ProfileTabs from '../components/profile/ProfileTabs';
 import PersonalInfoForm from '../components/profile/PersonalInfoForm';
 import SecurityForm from '../components/profile/SecurityForm';
+import DeleteAccountForm from '../components/profile/DeleteAccountForm';
 
 const Profile = () => {
   const { user, setUser } = useAuth();
@@ -73,6 +74,12 @@ const Profile = () => {
               onTogglePasswordVisibility={togglePasswordVisibility}
               onChangePassword={handleChangePassword}
               loading={passwordLoading}
+            />
+          )}
+
+          {activeTab === 'delete' && (
+            <DeleteAccountForm
+              user={user}
             />
           )}
         </div>

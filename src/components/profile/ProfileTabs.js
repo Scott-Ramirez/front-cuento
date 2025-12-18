@@ -1,5 +1,5 @@
 import React from 'react';
-import { User, Shield } from 'lucide-react';
+import { User, Shield, Trash2 } from 'lucide-react';
 
 const ProfileTabs = ({ activeTab, onTabChange }) => {
   const tabs = [
@@ -12,6 +12,11 @@ const ProfileTabs = ({ activeTab, onTabChange }) => {
       id: 'security',
       label: 'Seguridad',
       icon: Shield
+    },
+    {
+      id: 'delete',
+      label: 'Eliminar Cuenta',
+      icon: Trash2
     }
   ];
 
@@ -32,7 +37,9 @@ const ProfileTabs = ({ activeTab, onTabChange }) => {
             >
               <Icon className="inline mr-1 sm:mr-2" size={16} />
               <span className="hidden sm:inline">{tab.label}</span>
-              <span className="sm:hidden">{tab.id === 'profile' ? 'Perfil' : 'Seguridad'}</span>
+              <span className="sm:hidden">
+                {tab.id === 'profile' ? 'Perfil' : tab.id === 'security' ? 'Seguridad' : 'Eliminar'}
+              </span>
             </button>
           );
         })}
