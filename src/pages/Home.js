@@ -32,9 +32,10 @@ const Home = () => {
   const fetchStories = async () => {
     try {
       const { data } = await api.get('/stories');
-      setStories(data.slice(0, 8));
+      setStories(Array.isArray(data) ? data.slice(0, 8) : []);
     } catch (error) {
       console.error('Error fetching stories:', error);
+      setStories([]);
     } finally {
       setLoading(false);
     }
@@ -55,20 +56,20 @@ const Home = () => {
     navigate(`/read/${storyId}`);
   };
 
-  const totalPages = Math.ceil(stories.length / 4);
+  const totalPages = Math.ceil((stories?.length || 0) / 4);
 
   const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % totalPages);
+    setCurrentSlide((prev) => (prev + 1) % Math.max(totalPages, 1));
   };
 
   const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + totalPages) % totalPages);
+    setCurrentSlide((prev) => (prev - 1 + Math.max(totalPages, 1)) % Math.max(totalPages, 1));
   };
 
-  const displayedStories = stories.slice(
+  const displayedStories = Array.isArray(stories) ? stories.slice(
     currentSlide * 4,
     currentSlide * 4 + 4
-  );
+  ) : [];
 
   if (loading) {
     return (
