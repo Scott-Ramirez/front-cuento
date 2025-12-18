@@ -46,6 +46,14 @@ function App() {
           
           {/* Admin protected routes with Sidebar and simple footer */}
           <Route
+            path="/story/:id"
+            element={
+              <ProtectedRoute>
+                <MainLayout isAdminRoute={true}><StoryDetail /></MainLayout>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/dashboard"
             element={
               <ProtectedRoute>

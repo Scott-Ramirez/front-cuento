@@ -1,27 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Bell } from 'lucide-react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { Bell, BookOpen, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { getMediaUrl } from '../utils/media';
 
 const NotificationNavbar = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userStats, setUserStats] = useState({ totalStories: 0, lastUpdate: null });
 
   const notificationRef = useRef(null);
+  const isDashboard = location.pathname === '/dashboard';
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
     fetchUnreadCount();
-    const interval = setInterval(fetchUnreadCount, 30000);
+    if (isDashboard) {
+      fetchUserStats();
+    }
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+      if (isDashboard) {
+        fetchUserStats();
+      }
+    }, 30000);
     return () => clearInterval(interval);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isDashboard]);
 
   useEffect(() => {
     if (showNotifications && isAuthenticated) {
@@ -60,6 +71,34 @@ const NotificationNavbar = () => {
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
+  };
+
+  const fetchUserStats = async () => {
+    try {
+      const response = await api.get('/stories/my-stories');
+      const stories = Array.isArray(response.data) ? response.data : [];
+      setUserStats({
+        totalStories: stories.length,
+        lastUpdate: new Date()
+      });
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (isDashboard) {
+      fetchUserStats();
+    }
+    fetchUnreadCount();
+  };
+
+  const formatTime = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   };
 
   const handleNotificationClick = async (notification) => {
@@ -116,7 +155,35 @@ const NotificationNavbar = () => {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
       <div className="max-w-7xl mx-auto px-4">
-        <div className="flex justify-end items-center h-16">
+        <div className={`flex items-center h-16 ${isDashboard ? 'justify-between' : 'justify-end'}`}>
+          {/* User Info for Dashboard */}
+          {isDashboard && (
+            <div className="flex items-center gap-3">
+              <BookOpen size={20} className="text-primary-600" />
+              <div>
+                <div className="font-semibold text-gray-900">
+                  ¡Hola, {user?.username || 'Usuario'}!
+                </div>
+                <div className="text-sm text-gray-600 flex items-center gap-2">
+                  Tienes {userStats.totalStories} {userStats.totalStories === 1 ? 'cuento' : 'cuentos'}
+                  {userStats.lastUpdate && (
+                    <span className="text-xs text-gray-500">
+                      • Act. {formatTime(userStats.lastUpdate)}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={handleRefresh}
+                className="p-2 text-gray-600 hover:text-primary-600 transition-colors rounded-md hover:bg-gray-100"
+                title="Actualizar"
+              >
+                <RefreshCw size={16} />
+              </button>
+            </div>
+          )}
+
+          {/* Notifications */}
           <div className="relative" ref={notificationRef}>
             <button
               onClick={() => setShowNotifications(!showNotifications)}

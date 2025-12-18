@@ -1,26 +1,38 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Bell, BookOpen, Menu, X, LogOut, User, Home, Compass, LayoutDashboard, PlusCircle } from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Bell, BookOpen, Menu, X, LogOut, User, Home, Compass, LayoutDashboard, PlusCircle, RefreshCw } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userStats, setUserStats] = useState({ totalStories: 0, lastUpdate: null });
   const notificationRef = useRef(null);
+
+  const isDashboard = location.pathname === '/dashboard';
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchUnreadCount();
+      if (isDashboard) {
+        fetchUserStats();
+      }
       // Actualizar contador cada 30 segundos
-      const interval = setInterval(fetchUnreadCount, 30000);
+      const interval = setInterval(() => {
+        fetchUnreadCount();
+        if (isDashboard) {
+          fetchUserStats();
+        }
+      }, 30000);
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isDashboard]);
 
   useEffect(() => {
     if (showNotifications && isAuthenticated) {
@@ -56,6 +68,34 @@ const Navbar = () => {
     } catch (error) {
       console.error('Error fetching notifications:', error);
     }
+  };
+
+  const fetchUserStats = async () => {
+    try {
+      const response = await api.get('/stories/my-stories');
+      const stories = Array.isArray(response.data) ? response.data : [];
+      setUserStats({
+        totalStories: stories.length,
+        lastUpdate: new Date()
+      });
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  };
+
+  const handleRefresh = () => {
+    if (isDashboard) {
+      fetchUserStats();
+    }
+    fetchUnreadCount();
+  };
+
+  const formatTime = (date) => {
+    if (!date) return '';
+    return date.toLocaleTimeString('es-ES', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
   };
 
   const handleNotificationClick = async (notification) => {
@@ -145,9 +185,38 @@ const Navbar = () => {
             </div>
           ) : (
             <div className="flex items-center gap-4">
+              {/* User Info for Dashboard */}
+              {isDashboard && (
+                <div className="hidden lg:flex items-center gap-4 px-4 py-2 bg-gray-50 rounded-lg border">
+                  <div className="flex items-center gap-2">
+                    <BookOpen size={20} className="text-primary-600" />
+                    <div>
+                      <div className="font-semibold text-gray-900">
+                        ¡Hola, {user?.username || 'Usuario'}!
+                      </div>
+                      <div className="text-sm text-gray-600 flex items-center gap-2">
+                        Tienes {userStats.totalStories} {userStats.totalStories === 1 ? 'cuento' : 'cuentos'}
+                        {userStats.lastUpdate && (
+                          <span className="text-xs text-gray-500">
+                            • Act. {formatTime(userStats.lastUpdate)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleRefresh}
+                    className="p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                    title="Actualizar"
+                  >
+                    <RefreshCw size={16} />
+                  </button>
+                </div>
+              )}
+
               {/* Create Story Button */}
               <Link
-                to="/stories/create"
+                to="/create"
                 className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
               >
                 <PlusCircle size={20} />
