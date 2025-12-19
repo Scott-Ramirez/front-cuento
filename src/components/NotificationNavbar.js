@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Bell, BookOpen, RefreshCw } from 'lucide-react';
+import { Bell, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 import { getMediaUrl } from '../utils/media';
 
-const NotificationNavbar = () => {
+const NotificationNavbar = ({ searchTerm, setSearchTerm }) => {
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,6 +17,9 @@ const NotificationNavbar = () => {
 
   const notificationRef = useRef(null);
   const isDashboard = location.pathname === '/dashboard';
+  const isExplore = location.pathname === '/explore';
+  const isCreate = location.pathname === '/create';
+  const shouldShowGreeting = isDashboard || isExplore || isCreate;
 
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -86,13 +89,6 @@ const NotificationNavbar = () => {
     }
   };
 
-  const handleRefresh = () => {
-    if (isDashboard) {
-      fetchUserStats();
-    }
-    fetchUnreadCount();
-  };
-
   const formatTime = (date) => {
     if (!date) return '';
     return date.toLocaleTimeString('es-ES', { 
@@ -155,31 +151,51 @@ const NotificationNavbar = () => {
   return (
     <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-30">
       <div className="max-w-7xl mx-auto px-4">
-        <div className={`flex items-center h-16 ${isDashboard ? 'justify-between' : 'justify-end'}`}>
-          {/* User Info for Dashboard */}
-          {isDashboard && (
+        <div className={`flex items-center h-16 ${shouldShowGreeting ? 'justify-between gap-6' : 'justify-end'}`}>
+          {/* User Greeting */}
+          {shouldShowGreeting && (
             <div className="flex items-center gap-3">
-              <BookOpen size={20} className="text-primary-600" />
               <div>
                 <div className="font-semibold text-gray-900">
                   ¡Hola, {user?.username || 'Usuario'}!
                 </div>
-                <div className="text-sm text-gray-600 flex items-center gap-2">
-                  Tienes {userStats.totalStories} {userStats.totalStories === 1 ? 'cuento' : 'cuentos'}
-                  {userStats.lastUpdate && (
-                    <span className="text-xs text-gray-500">
-                      • Act. {formatTime(userStats.lastUpdate)}
-                    </span>
-                  )}
-                </div>
+                {isDashboard && (
+                  <div className="text-sm text-gray-600 flex items-center gap-2">
+                    Tienes {userStats.totalStories} {userStats.totalStories === 1 ? 'cuento' : 'cuentos'}
+                    {userStats.lastUpdate && (
+                      <span className="text-xs text-gray-500">
+                        • Act. {formatTime(userStats.lastUpdate)}
+                      </span>
+                    )}
+                  </div>
+                )}
+                {isExplore && (
+                  <div className="text-sm text-gray-600">
+                    Descubre nuevas historias
+                  </div>
+                )}
+                {isCreate && (
+                  <div className="text-sm text-gray-600">
+                    Crea tu próxima historia
+                  </div>
+                )}
               </div>
-              <button
-                onClick={handleRefresh}
-                className="p-2 text-gray-600 hover:text-primary-600 transition-colors rounded-md hover:bg-gray-100"
-                title="Actualizar"
-              >
-                <RefreshCw size={16} />
-              </button>
+            </div>
+          )}
+
+          {/* Search for Dashboard */}
+          {isDashboard && searchTerm !== undefined && (
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Buscar cuentos..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-colors text-sm"
+                />
+              </div>
             </div>
           )}
 
