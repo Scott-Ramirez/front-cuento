@@ -18,11 +18,16 @@ const useUpdateDetector = () => {
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
       const response = await fetch(`${apiUrl}/version`);
       if (response.ok) {
-        const { version, maintenance } = await response.json();
+        const { version, maintenanceWarning, maintenanceActive } = await response.json();
         
-        if (maintenance) {
+        // No mostrar alertas si está en mantenimiento activo
+        if (maintenanceActive) {
+          return;
+        }
+        
+        if (maintenanceWarning) {
           showMaintenanceAlert(
-            'El sistema estará en mantenimiento. Algunos servicios podrían no estar disponibles.',
+            'El sistema estará en mantenimiento próximamente. Guarda tu trabajo.',
             { duration: 0 }
           );
         }

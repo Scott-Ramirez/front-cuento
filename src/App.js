@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SystemAlertsProvider } from './context/SystemAlertsContext';
 import SystemAlerts from './components/common/SystemAlerts';
 import MainLayout from './components/MainLayout';
+import MaintenancePage from './pages/MaintenancePage';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -14,6 +15,7 @@ import Profile from './pages/Profile';
 import Explore from './pages/Explore';
 import BookReader from './pages/BookReader';
 import useUpdateDetector from './hooks/useUpdateDetector';
+import useMaintenanceCheck from './hooks/useMaintenanceCheck';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -36,8 +38,23 @@ const ProtectedRoute = ({ children }) => {
 
 // Component that handles update detection
 const AppContent = () => {
-  // Initialize update detector
+  // Initialize maintenance check and update detector
+  const { isMaintenanceActive, loading } = useMaintenanceCheck();
   useUpdateDetector();
+
+  // Show loading while checking maintenance status
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+      </div>
+    );
+  }
+
+  // Show maintenance page if active
+  if (isMaintenanceActive) {
+    return <MaintenancePage />;
+  }
 
   return (
     <Routes>
