@@ -124,6 +124,15 @@ const Sidebar = () => {
               <span className="font-medium">Cerrar Sesión</span>
             </button>
           </div>
+
+          {/* Version */}
+          <div className="p-4 border-t border-gray-800">
+            <div className="flex items-center justify-center">
+              <p className="text-xs text-gray-500">
+                Versión {process.env.REACT_APP_VERSION || '1.0.0'}
+              </p>
+            </div>
+          </div>
         </div>
       </aside>
 
