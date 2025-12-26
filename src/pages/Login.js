@@ -21,9 +21,19 @@ const Login = () => {
 
     if (result.success) {
       showSuccess('Has iniciado sesión exitosamente', '¡Bienvenido!');
-      const returnUrl = localStorage.getItem('returnUrl') || '/dashboard';
+      
+      // Redirección basada en rol directamente desde localStorage
+      const savedUser = JSON.parse(localStorage.getItem('user'));
+      const returnUrl = localStorage.getItem('returnUrl');
       localStorage.removeItem('returnUrl');
-      navigate(returnUrl);
+      
+      if (returnUrl) {
+        navigate(returnUrl);
+      } else if (savedUser?.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       setError(result.error);
       showError(result.error || 'Error al iniciar sesión');

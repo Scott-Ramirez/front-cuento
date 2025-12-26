@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Bell, BookOpen, Menu, X, LogOut, User, Home, Compass, LayoutDashboard, PlusCircle, RefreshCw } from 'lucide-react';
+import { Bell, BookOpen, Menu, X, LogOut, User, Home, Compass, LayoutDashboard, PlusCircle, RefreshCw, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, logout, isAdmin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [showNotifications, setShowNotifications] = useState(false);
@@ -171,6 +171,12 @@ const Navbar = () => {
           {!isAuthenticated ? (
             <div className="flex items-center gap-4">
               <Link
+                to="/release-notes"
+                className="px-4 py-2 text-gray-600 hover:text-primary-600 font-medium transition-colors"
+              >
+                Novedades
+              </Link>
+              <Link
                 to="/login"
                 className="px-6 py-2 text-primary-600 hover:text-primary-700 font-semibold transition-colors"
               >
@@ -288,6 +294,17 @@ const Navbar = () => {
 
                 {/* User Menu */}
                 <div className="hidden md:flex items-center gap-2">
+                  {/* Admin Panel Link */}
+                  {isAdmin() && (
+                    <Link
+                      to="/admin"
+                      className="flex items-center gap-2 px-3 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors font-medium"
+                      title="Panel de Administración"
+                    >
+                      <Settings size={18} />
+                      <span className="text-sm">Admin</span>
+                    </Link>
+                  )}
                   <Link
                     to="/profile"
                     className="flex items-center gap-2 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors"
@@ -359,6 +376,16 @@ const Navbar = () => {
                 <User size={20} />
                 <span>Perfil</span>
               </Link>
+              {isAdmin() && (
+                <Link
+                  to="/admin"
+                  className="flex items-center gap-2 px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-lg font-medium"
+                  onClick={() => setShowMobileMenu(false)}
+                >
+                  <Settings size={20} />
+                  <span>Admin Panel</span>
+                </Link>
+              )}
               <button
                 onClick={() => {
                   handleLogout();

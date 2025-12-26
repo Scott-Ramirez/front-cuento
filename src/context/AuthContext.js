@@ -77,6 +77,10 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const isAdmin = () => {
+    return user?.role === 'admin';
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -86,7 +90,8 @@ export const AuthProvider = ({ children }) => {
       register, 
       logout, 
       requireAuth,
-      isAuthenticated: !!user 
+      isAuthenticated: !!user,
+      isAdmin
     }}>
       {children}
     </AuthContext.Provider>

@@ -8,6 +8,7 @@ import {
   LogOut,
   Menu,
   X,
+  FileText,
 } from 'lucide-react';
 
 import { useAuth } from '../context/AuthContext';
@@ -29,6 +30,7 @@ const Sidebar = () => {
     { path: '/dashboard', icon: LayoutDashboard, label: 'Mis Cuentos' },
     { path: '/create', icon: PenTool, label: 'Crear Cuento' },
     { path: '/explore', icon: Compass, label: 'Explorar' },
+    { path: '/release-notes', icon: FileText, label: 'Novedades' },
     { path: '/profile', icon: User, label: 'Mi Perfil' },
   ];
 

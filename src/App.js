@@ -5,6 +5,8 @@ import { SystemAlertsProvider } from './context/SystemAlertsContext';
 import SystemAlerts from './components/common/SystemAlerts';
 import MainLayout from './components/MainLayout';
 import MaintenancePage from './pages/MaintenancePage';
+import AdminRoute from './components/AdminRoute';
+import RoleBasedRedirect from './components/RoleBasedRedirect';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -14,6 +16,8 @@ import CreateStory from './pages/CreateStory';
 import Profile from './pages/Profile';
 import Explore from './pages/Explore';
 import BookReader from './pages/BookReader';
+import AdminDashboard from './pages/AdminDashboard';
+import ReleaseNotes from './pages/ReleaseNotes';
 import useUpdateDetector from './hooks/useUpdateDetector';
 import useMaintenanceCheck from './hooks/useMaintenanceCheck';
 
@@ -40,6 +44,7 @@ const ProtectedRoute = ({ children }) => {
 const AppContent = () => {
   // Initialize maintenance check and update detector
   const { isMaintenanceActive, loading } = useMaintenanceCheck();
+  const { user } = useAuth(); // Get user info to check if admin
   useUpdateDetector();
 
   // Show loading while checking maintenance status
@@ -51,8 +56,8 @@ const AppContent = () => {
     );
   }
 
-  // Show maintenance page if active
-  if (isMaintenanceActive) {
+  // Show maintenance page if active and user is not admin
+  if (isMaintenanceActive && user?.role !== 'admin') {
     return <MaintenancePage />;
   }
 
@@ -62,9 +67,13 @@ const AppContent = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       
-      {/* Public routes with Navbar and full Footer */}
-      <Route path="/" element={<MainLayout isAdminRoute={false}><Home /></MainLayout>} />
+      {/* Role-based redirect for root route */}
+      <Route path="/" element={<RoleBasedRedirect />} />
+      
+      {/* Public home route with Navbar and full Footer */}
+      <Route path="/home" element={<MainLayout isAdminRoute={false}><Home /></MainLayout>} />
       <Route path="/stories/:id" element={<MainLayout isAdminRoute={false}><StoryDetail /></MainLayout>} />
+      <Route path="/release-notes" element={<MainLayout isAdminRoute={false}><ReleaseNotes /></MainLayout>} />
       
       {/* Admin protected routes with Sidebar and simple footer */}
       <Route
@@ -113,6 +122,14 @@ const AppContent = () => {
           <ProtectedRoute>
             <MainLayout isAdminRoute={true}><Profile /></MainLayout>
           </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboard />
+          </AdminRoute>
         }
       />
     </Routes>

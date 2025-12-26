@@ -46,22 +46,6 @@ export const SystemAlertsProvider = ({ children }) => {
   }, []);
 
   // Specific methods for different alert types
-  const showUpdateAlert = useCallback((message, options = {}) => {
-    // Verificar si ya hay una alerta de actualización activa
-    const hasUpdateAlert = alerts.some(alert => alert.type === 'update');
-    if (hasUpdateAlert) {
-      return; // No mostrar alertas duplicadas
-    }
-    
-    return addAlert({
-      type: 'update',
-      title: '🔄 Actualización disponible',
-      message,
-      duration: 0, // Don't auto-dismiss updates
-      ...options
-    });
-  }, [addAlert, alerts]);
-
   const showMaintenanceAlert = useCallback((message, options = {}) => {
     // Verificar si ya hay una alerta de mantenimiento activa
     const hasMaintenanceAlert = alerts.some(alert => alert.type === 'warning' && alert.title.includes('Mantenimiento'));
@@ -127,7 +111,6 @@ export const SystemAlertsProvider = ({ children }) => {
     addAlert,
     removeAlert,
     clearAllAlerts,
-    showUpdateAlert,
     showMaintenanceAlert,
     showInfoAlert,
     showSuccessAlert,

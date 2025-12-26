@@ -1,16 +1,38 @@
 import { useEffect, useCallback, useRef } from 'react';
 import { useSystemAlerts } from '../context/SystemAlertsContext';
-
-// Version del frontend - actualizar cuando haya cambios importantes
-const CURRENT_VERSION = process.env.REACT_APP_VERSION || '0.0.1';
+import { useAuth } from '../context/AuthContext';
 
 const useUpdateDetector = () => {
-  const { showUpdateAlert, showMaintenanceAlert } = useSystemAlerts();
+  const { showMaintenanceAlert, showInfoAlert } = useSystemAlerts();
+  const { user } = useAuth(); // Verificar si el usuario está logueado
   const isCheckingRef = useRef(false);
 
-  // Verificar si hay nueva versión disponible
+  // Verificar si ya se vio esta release note
+  const hasSeenReleaseNote = useCallback((releaseId) => {
+    if (!releaseId) return false;
+    const seenReleases = JSON.parse(localStorage.getItem('seenReleaseNotes') || '[]');
+    return seenReleases.includes(releaseId);
+  }, []);
+
+  // Marcar release note como vista
+  const markReleaseNoteSeen = useCallback((releaseId) => {
+    if (!releaseId) return;
+    const seenReleases = JSON.parse(localStorage.getItem('seenReleaseNotes') || '[]');
+    if (!seenReleases.includes(releaseId)) {
+      seenReleases.push(releaseId);
+      localStorage.setItem('seenReleaseNotes', JSON.stringify(seenReleases));
+    }
+  }, []);
+
+  // Verificar estado de mantenimiento y release notes
   const checkForUpdates = useCallback(async () => {
     if (isCheckingRef.current) return; // Prevenir múltiples verificaciones simultáneas
+    
+    // Solo verificar si el usuario está logueado
+    if (!user) return;
+    
+    // No mostrar alertas de mantenimiento si el usuario es admin
+    if (user.role === 'admin') return;
     
     isCheckingRef.current = true;
     try {
@@ -18,7 +40,7 @@ const useUpdateDetector = () => {
       const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:3000';
       const response = await fetch(`${apiUrl}/version`);
       if (response.ok) {
-        const { version, maintenanceWarning, maintenanceActive } = await response.json();
+        const { maintenanceWarning, maintenanceActive, maintenanceMessage, releaseNotes, releaseId, releaseTitle } = await response.json();
         
         // No mostrar alertas si está en mantenimiento activo
         if (maintenanceActive) {
@@ -27,16 +49,21 @@ const useUpdateDetector = () => {
         
         if (maintenanceWarning) {
           showMaintenanceAlert(
-            'El sistema estará en mantenimiento próximamente. Guarda tu trabajo.',
+            maintenanceMessage || 'El sistema estará en mantenimiento próximamente. Guarda tu trabajo.',
             { duration: 0 }
           );
         }
-        
-        if (version && version !== CURRENT_VERSION) {
-          showUpdateAlert(
-            `Nueva versión ${version} disponible. Actualiza para obtener las últimas mejoras y correcciones.`,
-            { duration: 0 }
+
+        // Mostrar release notes solo si están disponibles y no se han visto antes
+        if (releaseNotes && releaseNotes.trim() && releaseId && !hasSeenReleaseNote(releaseId)) {
+          // Usar el título personalizado de la base de datos o uno por defecto
+          const alertTitle = releaseTitle || '✨ ¡Nuevas mejoras disponibles!';
+          showInfoAlert(
+            releaseNotes,
+            { duration: 0, title: alertTitle, isModal: true }
           );
+          // Marcar como vista después de mostrarla
+          markReleaseNoteSeen(releaseId);
         }
       }
     } catch (error) {
@@ -44,40 +71,21 @@ const useUpdateDetector = () => {
     } finally {
       isCheckingRef.current = false;
     }
-  }, [showUpdateAlert, showMaintenanceAlert]);
+  }, [showMaintenanceAlert, showInfoAlert, user, hasSeenReleaseNote, markReleaseNoteSeen]);
 
-  // Verificar si el código cambió (desarrollo)
-  const checkForCodeChanges = useCallback(() => {
-    if (process.env.NODE_ENV === 'development') {
-      // Verificar cada 30 segundos en desarrollo
-      const interval = setInterval(() => {
-        fetch(window.location.href, { 
-          cache: 'no-cache',
-          method: 'HEAD'
-        }).catch(() => {
-          // Si hay error, probablemente hay cambios
-          showUpdateAlert(
-            'Se detectaron cambios en la aplicación.',
-            { duration: 0 }
-          );
-          clearInterval(interval);
-        });
-      }, 30000);
-
-      return () => clearInterval(interval);
-    }
-  }, [showUpdateAlert]);
-
-  // Manual trigger para mostrar alertas de actualización
-  const triggerUpdateAlert = useCallback((message) => {
-    showUpdateAlert(message || 'Nueva versión disponible');
-  }, [showUpdateAlert]);
-
+  // Manual trigger para mostrar alertas
   const triggerMaintenanceAlert = useCallback((message) => {
     showMaintenanceAlert(
       message || 'Mantenimiento programado en curso'
     );
   }, [showMaintenanceAlert]);
+
+  const triggerReleaseNotesAlert = useCallback((message) => {
+    showInfoAlert(
+      message,
+      { duration: 0, title: '✨ ¡Nuevas mejoras disponibles!' }
+    );
+  }, [showInfoAlert]);
 
   useEffect(() => {
     // Verificar actualizaciones al cargar (con delay para evitar duplicados)
@@ -85,23 +93,19 @@ const useUpdateDetector = () => {
       checkForUpdates();
     }, 1000);
     
-    // Configurar detección de cambios en desarrollo
-    const cleanup = checkForCodeChanges();
-    
-    // Verificar periódicamente (cada 15 minutos)
-    const interval = setInterval(checkForUpdates, 15 * 60 * 1000);
+    // Verificar periódicamente (cada 30 segundos para mantenimiento)
+    const interval = setInterval(checkForUpdates, 30000);
     
     return () => {
       clearTimeout(initialDelay);
       clearInterval(interval);
-      if (cleanup) cleanup();
     };
-  }, [checkForUpdates, checkForCodeChanges]);
+  }, [checkForUpdates]);
 
   return {
-    triggerUpdateAlert,
+    checkForUpdates,
     triggerMaintenanceAlert,
-    checkForUpdates
+    triggerReleaseNotesAlert
   };
 };
 
