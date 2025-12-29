@@ -11,6 +11,7 @@ const Navbar = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [notifications, setNotifications] = useState([]);
+  const [releaseNoteNotifications, setReleaseNoteNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userStats, setUserStats] = useState({ totalStories: 0, lastUpdate: null });
   const notificationRef = useRef(null);
@@ -37,6 +38,7 @@ const Navbar = () => {
   useEffect(() => {
     if (showNotifications && isAuthenticated) {
       fetchNotifications();
+      fetchReleaseNoteNotifications();
     }
   }, [showNotifications, isAuthenticated]);
 
@@ -70,6 +72,17 @@ const Navbar = () => {
     }
   };
 
+  const fetchReleaseNoteNotifications = async () => {
+    try {
+      const response = await api.get('/notifications/release-notes');
+      setReleaseNoteNotifications(response.data);
+    } catch (error) {
+      console.error('Error fetching release note notifications:', error);
+      // En caso de error, mostrar datos vacíos
+      setReleaseNoteNotifications([]);
+    }
+  };
+
   const fetchUserStats = async () => {
     try {
       const response = await api.get('/stories/my-stories');
@@ -99,7 +112,13 @@ const Navbar = () => {
   };
 
   const handleNotificationClick = async (notification) => {
-    // Marcar como leída
+    // Para release notes, solo cerrar el panel de notificaciones
+    if (notification.type === 'release_note') {
+      setShowNotifications(false);
+      return;
+    }
+
+    // Marcar como leída solo si es una notificación regular
     if (!notification.is_read) {
       try {
         await api.put(`/notifications/${notification.id}/read`);
@@ -121,6 +140,10 @@ const Navbar = () => {
   };
 
   const getNotificationText = (notification) => {
+    if (notification.type === 'release_note') {
+      return `Nueva actualización: ${notification.title}`;
+    }
+    
     const username = notification.triggered_by?.username || 'Alguien';
     switch (notification.type) {
       case 'like':
@@ -132,6 +155,21 @@ const Navbar = () => {
       default:
         return 'Nueva notificación';
     }
+  };
+
+  const getNotificationIcon = (notification) => {
+    if (notification.type === 'release_note') {
+      const typeColorMap = {
+        'major': 'text-red-500',
+        'security': 'text-orange-500',
+        'minor': 'text-blue-500',
+        'patch': 'text-green-500'
+      };
+      return (
+        <RefreshCw className={`h-4 w-4 ${typeColorMap[notification.releaseType] || 'text-gray-500'}`} />
+      );
+    }
+    return <Bell className="h-4 w-4 text-blue-500" />;
   };
 
   const getTimeAgo = (date) => {
@@ -170,12 +208,6 @@ const Navbar = () => {
           {/* Right Side - Auth Buttons for non-authenticated users */}
           {!isAuthenticated ? (
             <div className="flex items-center gap-4">
-              <Link
-                to="/release-notes"
-                className="px-4 py-2 text-gray-600 hover:text-primary-600 font-medium transition-colors"
-              >
-                Novedades
-              </Link>
               <Link
                 to="/login"
                 className="px-6 py-2 text-primary-600 hover:text-primary-700 font-semibold transition-colors"
@@ -249,12 +281,65 @@ const Navbar = () => {
                       <div className="p-4 border-b border-gray-200">
                         <h3 className="font-bold text-gray-900">Notificaciones</h3>
                       </div>
-                      {notifications.length === 0 ? (
+                      {notifications.length === 0 && releaseNoteNotifications.length === 0 ? (
                         <div className="p-4 text-center text-gray-500">
                           No tienes notificaciones
                         </div>
                       ) : (
                         <div className="divide-y divide-gray-100">
+                          {/* Release Notes como notificaciones especiales */}
+                          {releaseNoteNotifications.map((notification) => (
+                            <div
+                              key={`release-${notification.id}`}
+                              onClick={() => handleNotificationClick(notification)}
+                              className="p-4 cursor-pointer hover:bg-gray-50 transition-colors bg-gradient-to-r from-blue-50 to-purple-50 border-l-4 border-blue-500"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                                  {getNotificationIcon(notification)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <p className="text-sm text-gray-900 font-semibold">
+                                      {getNotificationText(notification)}
+                                    </p>
+                                    {notification.isNew && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        ¡Nuevo!
+                                      </span>
+                                    )}
+                                  </div>
+                                  {notification.summary && (
+                                    <p className="text-xs text-gray-600 mb-1">
+                                      {notification.summary.substring(0, 100)}...
+                                    </p>
+                                  )}
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                      notification.releaseType === 'major' ? 'bg-red-100 text-red-800' :
+                                      notification.releaseType === 'security' ? 'bg-orange-100 text-orange-800' :
+                                      notification.releaseType === 'minor' ? 'bg-blue-100 text-blue-800' :
+                                      'bg-green-100 text-green-800'
+                                    }`}>
+                                      v{notification.version}
+                                    </span>
+                                    <p className="text-xs text-gray-400">
+                                      {getTimeAgo(notification.releaseDate)}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+
+                          {/* Separador si hay ambos tipos de notificaciones */}
+                          {releaseNoteNotifications.length > 0 && notifications.length > 0 && (
+                            <div className="px-4 py-2 bg-gray-50">
+                              <p className="text-xs text-gray-500 font-medium">Actividad de tus cuentos</p>
+                            </div>
+                          )}
+
+                          {/* Notificaciones regulares */}
                           {notifications.map((notification) => (
                             <div
                               key={notification.id}
